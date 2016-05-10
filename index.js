@@ -19,6 +19,7 @@ io.on('connection', function (socket) {
 
   socket.on('new message', function (data) {
     console.log(data);
+    console.log("data above");
 
     var message = {
       text: data.text,
@@ -28,7 +29,7 @@ io.on('connection', function (socket) {
       pkey: data.pkey
     };
 
-    socket.broadcast.emit('new message', message);
+	socket.broadcast.to(data.roomId).emit('new message', message);
   });
 
 });
