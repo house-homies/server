@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+
+var NodeRSA = require('node-rsa');
+
+var key = new NodeRSA();
+key.generateKeyPair(1024, 65537);
+
+function RSAGetPrivateString(key) {
+  var privateKeys = ['n', 'e', 'd', 'p', 'q', 'dmp1', 'dmq1', 'coeff'];
+  var ret = {};
+  var that = key;
+  privateKeys.forEach(function(key) {
+    ret[key] = that[key] && that[key].toString(16);
+    if (key != 'e' && ret[key].length % 2 == 1) {
+      ret[key] = '0' + ret[key];
+    }
+  });
+
+  return JSON.stringify(ret);
+}
+
+console.log(RSAGetPrivateString(key.keyPair));
+console.log();
+console.log(key.exportKey("private"));
+

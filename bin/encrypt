@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+
+var NodeRSA = require('node-rsa');
+var fs      = require("fs");
+
+var private_key_buffer = fs.readFileSync("./private_key");
+var key = NodeRSA(private_key_buffer);
+
+var decrypted = process.argv[2];
+console.log("decrypted: ", decrypted);
+ 
+var encrypted = key.encrypt(decrypted, 'hex');
+console.log('encrypted: ', encrypted);
+
+
