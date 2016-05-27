@@ -6,26 +6,47 @@ var express     = require('express');
 var app         = express();
 var server      = require('http').createServer(app);
 var io          = require('socket.io')(server);
-var NodeRSA     = require('node-rsa');
+//var NodeRSA     = require('node-rsa');
+var RSAKey 	= require('react-native-rsa');
 
-var key_buffer  = fs.readFileSync("./private_key");
-var key         = NodeRSA(key_buffer);
+//var key_buffer  = fs.readFileSync("./private_key");
+//var key         = NodeRSA(key_buffer);
 
 server.listen(5000, () => console.log('Server listening at port 5000'));
 app.use(express.static(__dirname + '/static'));
+  
+const bits = 1024;
+const exponent = '10001'; // must be a string. This is hex string. decimal = 65537
+var rsa = new RSAKey();
+rsa.generate(bits, exponent);
+var publicKey = rsa.getPublicString(); // return json encoded string
+var privateKey = rsa.getPrivateString(); // return json encoded string
 
 io.on('connection', function (socket) {
   console.log("New connection:\t" + socket.id);
-
-  setInterval( () => send_test_message(socket), 3000);
+  
+  
+  // setInterval( () => send_test_message(socket, rsa), 3000);
 
   socket.on('join room', join_room);
+  socket.on('request_server_key', (message) => {
+     socket.emit('broadcast_key', publicKey);
+     console.log('hey');
+  });
+  socket.on('request_room_key', (message) => {
+    console.log('gucci');
+    data = rsa.decrypt(message.roomId);
+    rsa.setPublicString(data.pkey);
+    socket.emit('room_key', rsa.encrypt('testtesttest'));
+  });
   socket.on('new message', new_message);
 });
 
-function send_test_message(socket) {
+function send_test_message(socket, rsa) {
+
   var message = {
-    text     : key.encrypt("Gucci", "hex"),
+    text     : rsa.encrypt("Gucci"),
+    pkey     : rsa.getPrivateString(),
     name     : "Jonah",
     uniqueId : Math.round(Math.random() * 10000),
     date     : new Date(2016, 3, 14, 13, 0),
@@ -46,9 +67,8 @@ function send_private_key() {
 
 function join_room(encrypted_data) {
   // Decrypt with server RSA private key
-  var unencrypted_data = encrypted_data;
 
-  socket.join(unencrypted_data.room_id);
+  socket.join(encrypted_data);
 }
 
 function new_message(message) {
