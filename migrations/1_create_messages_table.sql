@@ -1,6 +1,8 @@
 CREATE TABLE messages (
-    id INT NOT NULL AUTO_INCREMENT,
+    id SERIAL NOT NULL,
     room_id INT NOT NULL,
+    name TEXT NOT NULL,
     body TEXT NOT NULL,
-    PRIMARY KEY (`id`),
+    created_at TIMESTAMP default current_timestamp,
+    PRIMARY KEY (id)
 );

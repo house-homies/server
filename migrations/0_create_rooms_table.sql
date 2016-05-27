@@ -1,6 +1,8 @@
 CREATE TABLE rooms (
-    id INT NOT NULL AUTO_INCREMENT,
+    id SERIAL NOT NULL,
     name TEXT NOT NULL,
     aes_key TEXT NOT NULL,
-    PRIMARY KEY (`id`),
+    PRIMARY KEY (id)
 );
+
+CREATE UNIQUE INDEX name_unique_idx ON rooms (name);
