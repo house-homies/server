@@ -12,7 +12,6 @@ var key_buffer  = fs.readFileSync("./private_key");
 var key         = NodeRSA(key_buffer);
 
 server.listen(5000, () => console.log('Server listening at port 5000'));
-app.use(express.static(__dirname + '/static'));
 
 io.on('connection', (socket) => {
   console.log("New connection:", socket.id);
