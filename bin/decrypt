@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 
-var NodeRSA = require('node-rsa');
-var fs      = require("fs");
+var RSAKey   = require("react-native-rsa");
+var key_json = require("../private_key.json");
 
-var private_key_buffer = fs.readFileSync("./private_key");
-var key = NodeRSA(private_key_buffer);
+var key = new RSAKey();
+key.setPrivateEx(key_json.n, key_json.e, key_json.d, key_json.p, key_json.q, 
+  key_json.dmp1, key_json.dmq1, key_json.coeff);
 
 var encrypted = process.argv[2];
 console.log("encrypted: ", encrypted);
  
-var buffer = new Buffer(encrypted, 'hex');
-
-var decrypted = key.decrypt(buffer.toString('base64'), 'utf8');
+var decrypted = key.decrypt(encrypted);
 console.log('decrypted: ', decrypted);
 
 
