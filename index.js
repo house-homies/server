@@ -6,7 +6,7 @@ var express     = require('express');
 var app         = express();
 var server      = require('http').createServer(app);
 var io          = require('socket.io')(server);
-var NodeRSA     = require('node-rsa');
+var rsa         = require('react-native-rsa');
 
 var key_buffer  = fs.readFileSync("./private_key");
 var key         = NodeRSA(key_buffer);
