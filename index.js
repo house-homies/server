@@ -1,22 +1,23 @@
 require('dotenv').config();
 require("./db.js");
 
-var fs          = require("fs");
-var express     = require('express');
-var app         = express();
-var server      = require('http').createServer(app);
-var io          = require('socket.io')(server);
-var rsa         = require('react-native-rsa');
+var fs       = require("fs");
+var express  = require('express');
+var app      = express();
+var server   = require('http').createServer(app);
+var io       = require('socket.io')(server);
+var rsa      = require('react-native-rsa');
 
-var key_buffer  = fs.readFileSync("./private_key");
-var key         = NodeRSA(key_buffer);
+var key_json = require("./private_key.json");
+var key      = rsa.setPrivateEx(key_json.n, key_json.e, key_json.d, key_json.p, 
+                 key_json.q, key_json.dmp1, key_json.dmq1, key_json.coeff);
 
 server.listen(5000, () => console.log('Server listening at port 5000'));
 
 io.on('connection', (socket) => {
   console.log("New connection:", socket.id);
-  socket.on('join room', join_room);
-  socket.on('new message', new_message);
+  socket.on('join room',         join_room);
+  socket.on('new message',       new_message);
   socket.on('previous messages', previous_messages);
 });
 
