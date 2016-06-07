@@ -25,22 +25,48 @@ var privateKey = rsa.getPrivateString(); // return json encoded string
 io.on('connection', function (socket) {
   console.log("New connection:\t" + socket.id);
   
-  
   // setInterval( () => send_test_message(socket, rsa), 3000);
 
-  socket.on('join room', join_room);
+  //socket.on('join room', join_room);
+  socket.on('join room', (roomId) => {
+    socket.join(roomId);
+  });
+
   socket.on('request_server_key', (message) => {
      socket.emit('broadcast_key', publicKey);
-     console.log('hey');
+     console.log('sent server key to client');
   });
+
   socket.on('request_room_key', (message) => {
-    console.log('gucci');
-    data = rsa.decrypt(message.roomId);
-    rsa.setPublicString(data.pkey);
-    socket.emit('room_key', rsa.encrypt('testtesttest'));
+    roomId = rsa.decrypt(message.roomId);
+    console.log("room requested: " + roomId);
+
+    rsa.setPublicString(message.pkey);
+    roomKey = rsa.encrypt('testtesttest');
+    console.log(roomKey);
+   
+    socket.emit('room_key', roomKey);
+    console.log('sent room key to client');
   });
-  socket.on('new message', new_message);
+
+  socket.on('new message', (message) => {
+    console.log(message);
+
+    var message = {
+      text     : message.text,
+      roomId   : message.roomId,
+      name     : message.name,
+      uniqueId : Math.round(Math.random() * 10000),
+      date     : new Date(2016, 3, 14, 13, 0),
+    };
+
+    socket.broadcast
+      .to(message.roomId)
+      .emit('new message', message);
+  });
 });
+function send_room_key(message) {
+  }
 
 function send_test_message(socket, rsa) {
 
@@ -65,10 +91,11 @@ function send_private_key() {
   socket.emit('private key', message);
 }
 
-function join_room(encrypted_data) {
-  // Decrypt with server RSA private key
-
-  socket.join(encrypted_data);
+function join_room(roomId) {
+  console.log('join room first');
+  console.log(socket);
+  socket.join(roomId);
+  console.log('join room last');
 }
 
 function new_message(message) {
