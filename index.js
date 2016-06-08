@@ -3,7 +3,7 @@ require('dotenv').config();
 var crypto = require('crypto');
 var pg     = require('pg');
 
-var conString = "postgres://kptristan:@localhost/homiedb";
+var conString = "postgres://zane_salvatore:@localhost:5432/homiedb";
 var client = new pg.Client(conString);
 
 
@@ -86,6 +86,8 @@ function generate_aes_key() {
   return crypto.randomBytes(32).toString('hex');
 }
 
+var aes_key = 'f0ki13SQeRpLQrqk73UxhBAI7vd35FgYrNkVybgBIxc=';
+
 var fs       = require("fs");
 var express  = require('express');
 var app      = express();
@@ -100,16 +102,41 @@ server.listen(5000, () => console.log('Server listening at port 5000'));
 
 io.on('connection', (socket) => {
   console.log("New connection:", socket.id);
-  socket.on('join room',         join_room(socket));
-  socket.on('new message',       new_message(socket));
-  socket.on('previous messages', previous_messages(socket));
+  socket.on('join room',          join_room(socket));
+  socket.on('new message',        new_message(socket));
+  socket.on('previous messages',  previous_messages(socket));
+  socket.on('request_server_key', request_server_key(socket));
+  socket.on('request_room_key',   request_room_key(socket));
 });
 
+function request_room_key(socket) {
+  var fn = function(message) {
+    roomId = rsa.decrypt(message.roomId);
+    console.log("room requested: " + roomId);
+
+    rsa.setPublicString(message.pkey);
+
+    console.log('unencrypted room key: ', aes_key);
+    roomKey = rsa.encrypt(aes_key);
+    console.log(roomKey);
+
+    socket.emit('room_key', roomKey);
+    console.log('sent room key to client');
+  };
+  return fn;
+}
+
+function request_server_key(socket) {
+  var fn = function (message) {
+    socket.emit('broadcast_key', publicKey);
+    console.log('sent server key to client');
+  };
+  return fn;
+}
+
 function join_room(socket) {
-  var fn = function (encrypted_data) {
-    // Decrypt with server RSA private key
-    var unencrypted_data = encrypted_data;
-    find_room(unencrypted_data, (room) => {
+  var fn = function (room_name) {
+    find_room(room_name, (room) => {
       socket.join(room);
     });
   };
