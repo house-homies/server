@@ -1,37 +1,34 @@
 require('dotenv').config();
 
+
 var crypto = require('crypto');
 var pg     = require('pg');
 
 //var client = new pg.Client(process.env.DATABASE_URL);
-var client = new pg.Client("postgres://localhost:5432/homiedb");
+//var conString = "postgres://localhost/homiedb";
+//var client = new pg.Client(conString);
 //client.connect();
 
-pg.connect("postgres://localhost:5432/homiedb", function(err, client, done) {
+var conString = "postgres://kptristan:@localhost/homiedb";
+var client = new pg.Client(conString);
+
+
+client.connect(function(err) {
   if(err) {
     return console.error('error fetching client from pool', err);
   }
-  client.query('SELECT $1::int AS number', ['1'], function(err, result) {
-    //call `done()` to release the client back to the pool
-    done();
 
-    if(err) {
-      return console.error('error running query', err);
-    }
-    console.log(result.rows[0].number);
-    //output: 1
-
-  });
   client.query('SELECT * FROM messages;', function(err, result) {
     //call `done()` to release the client back to the pool
-    done();
+    //done();
 
     if(err) {
       return console.error('error running query', err);
     }
+    console.log("this");
     console.log(result.rows);
     //output: 1
-
+    client.end();
   });
 });
 
@@ -42,6 +39,7 @@ var dbfun = module.exports = {
     console.log(sql);
     client.query(sql, [msg.room_id, msg.name, msg.text], (err, results) => {
       if (err) throw err;
+
       cb(results.rows[0]);
 
     });
@@ -51,7 +49,10 @@ var dbfun = module.exports = {
     var sql = 'INSERT INTO rooms (name, aes_key) VALUES ($1, $2) RETURNING *';
     var key = generate_aes_key();
     client.query(sql, [name, key.toString()], (err, results) => {
-      if (err) throw err;
+      if (err){
+        console.log(err);
+        throw err;
+      }
       cb(results.rows[0]);
     });
   },
