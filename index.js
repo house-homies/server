@@ -2,6 +2,7 @@ require('dotenv').config();
 require("./db.js");
 
 var fs          = require("fs");
+var crypto      = require('crypto');
 var express     = require('express');
 var app         = express();
 var server      = require('http').createServer(app);
@@ -21,6 +22,8 @@ var rsa = new RSAKey();
 rsa.generate(bits, exponent);
 var publicKey = rsa.getPublicString(); // return json encoded string
 var privateKey = rsa.getPrivateString(); // return json encoded string
+
+var aes_key = generate_aes_key();
 
 io.on('connection', function (socket) {
   console.log("New connection:\t" + socket.id);
@@ -42,7 +45,8 @@ io.on('connection', function (socket) {
     console.log("room requested: " + roomId);
 
     rsa.setPublicString(message.pkey);
-    roomKey = rsa.encrypt('testtesttest');
+    console.log('unencrypted room key: ', aes_key);
+    roomKey = rsa.encrypt(aes_key);
     console.log(roomKey);
    
     socket.emit('room_key', roomKey);
@@ -65,8 +69,10 @@ io.on('connection', function (socket) {
       .emit('new message', message);
   });
 });
-function send_room_key(message) {
-  }
+
+function generate_aes_key() {
+  return crypto.randomBytes(32).toString('base64');
+}
 
 function send_test_message(socket, rsa) {
 
